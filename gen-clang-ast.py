@@ -23,8 +23,11 @@ def parse_args():
     """Parse command-line arguments."""
     parser = ArgumentParser(description='Generate Clang ASTs from a '
                                         'compilation database')
-    parser.add_argument('-c', '--clang-binary', metavar='PATH', default='clang',
-                        help='Path to clang binary')
+    parser.add_argument('-cc', '--clang-binary', metavar='PATH',
+                        default='clang', help='Path to clang binary')
+    parser.add_argument('-cxx', '--clang++-binary', metavar='PATH',
+                        dest='clangxx_binary', default='clang++',
+                        help='Path to clang++ binary')
     parser.add_argument('-o', '--output', metavar='OUT', required=True,
                         help='Output directory for AST JSON files')
     parser.add_argument('-j', type=int, default=0,
@@ -60,11 +63,16 @@ def run_clang(args, queue, lock, failed_files):
         entry = queue.get()
         name = entry['file']
         directory = entry['directory']
-        clang_args = entry['arguments'][1:] # skip the compiler argument
+        compiler, *clang_args = entry['arguments']
         path = make_absolute(name, directory)
 
-        invocation = [args.clang_binary, '-Xclang', '-ast-dump=json',
-                      '-fsyntax-only', *clang_args]
+        if compiler == 'cc':
+            compiler = args.clang_binary
+        elif compiler == 'c++':
+            compiler = args.clangxx_binary
+
+        invocation = [compiler, '-Xclang', '-ast-dump=json', '-fsyntax-only',
+                      *clang_args]
 
         proc = subprocess.Popen(invocation, cwd=directory,
                                 stdout=subprocess.PIPE,
