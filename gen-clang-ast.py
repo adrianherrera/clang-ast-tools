@@ -48,6 +48,7 @@ def find_compilation_database(path):
 
 
 def make_absolute(f, directory):
+    """Make an absolute path."""
     if os.path.isabs(f):
         return f
     return os.path.normpath(os.path.join(directory, f))
@@ -59,10 +60,17 @@ def run_clang(args, queue, lock, failed_files):
         entry = queue.get()
         name = entry['file']
         clang_args = entry['arguments'][1:] # skip the compiler argument
-
         path = make_absolute(name, entry['directory'])
+
+        clang_args = []
+        for arg in entry['arguments'][1:]:
+            if arg == name:
+                clang_args.append(path)
+            else:
+                clang_args.append(arg)
+
         invocation = [args.clang_binary, '-Xclang', '-ast-dump=json',
-                      '-fsyntax-only', path, *clang_args]
+                      '-fsyntax-only', *clang_args]
 
         proc = subprocess.Popen(invocation, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
@@ -96,7 +104,6 @@ def main():
     # Load the database and extract all files
     with open(os.path.join(build_path, db_path), 'r') as inf:
         database = json.load(inf)
-        files = [(entry['file'], entry['directory']) for entry in database]
 
     max_task = args.j
     if max_task == 0:
