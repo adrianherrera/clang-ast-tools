@@ -59,20 +59,15 @@ def run_clang(args, queue, lock, failed_files):
     while True:
         entry = queue.get()
         name = entry['file']
+        directory = entry['directory']
         clang_args = entry['arguments'][1:] # skip the compiler argument
-        path = make_absolute(name, entry['directory'])
-
-        clang_args = []
-        for arg in entry['arguments'][1:]:
-            if arg == name:
-                clang_args.append(path)
-            else:
-                clang_args.append(arg)
+        path = make_absolute(name, directory)
 
         invocation = [args.clang_binary, '-Xclang', '-ast-dump=json',
                       '-fsyntax-only', *clang_args]
 
-        proc = subprocess.Popen(invocation, stdout=subprocess.PIPE,
+        proc = subprocess.Popen(invocation, cwd=directory,
+                                stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         output, err = proc.communicate()
         if proc.returncode != 0:
