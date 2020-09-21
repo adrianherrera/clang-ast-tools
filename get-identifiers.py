@@ -67,11 +67,9 @@ def main():
     identifiers = set()
 
     for path in args.json:
-        sys.stdout.write('parsing %s\n' % path)
         with open(path, 'r') as inf:
             for ast in parse_ast(inf):
                 identifiers |= walk_ast_rec(ast)
-    sys.stdout.write('\n')
 
     identifiers = [dict(identifier=iden, type=iden_type)
                    for iden, iden_type in identifiers]
