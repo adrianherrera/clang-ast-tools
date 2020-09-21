@@ -7,7 +7,9 @@ import json
 import sys
 
 
-AST_VAR_TYPE_MAP = dict(EnumConstantDecl='enum', FunctionDecl='function',
+AST_VAR_TYPE_MAP = dict(CXXMethodDecl='cxx_method', EnumConstantDecl='enum',
+                        FunctionDecl='function',
+                        NonTypeTemplateParmDecl='cxx_template_param',
                         ParmVarDecl='parameter', VarDecl='variable')
 
 
